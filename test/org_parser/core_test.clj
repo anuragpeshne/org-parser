@@ -10,9 +10,9 @@
   [element]
   (wrap-html (str "<body>" element "</body>")))
 
-(deftest heading-test
-  (testing "Simple level 1 heading"
-    (let [input "* Hello World"
-          expected-output (wrap-body "<h1>Hello World</h1>")]
-      (is (=  expected-output
-              (org-parser.core/compile-to-html input))))))
+;(deftest heading-test
+;  (testing "Simple level 1 heading"
+;    (let [input "* Hello World"
+;          expected-output (wrap-body "<h1>Hello World</h1>")]
+;      (is (=  expected-output
+;              (org-parser.core/compile-to-html input))))))
