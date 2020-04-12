@@ -41,4 +41,24 @@ int b = a;")
                              [:text "int a = 0;"]
                              [:text "int b = a;"])
           actual-out (tok/tokenize input)]
+      (is (= expected-out actual-out))))
+  (testing "example block"
+    (let [input-content (str/trim "
+A very good example
+With multiple lines")
+          input (str/join "\n" (list "#+BEGIN_EXAMPLE"
+                                     input-content
+                                     "#+END_EXAMPLE"))
+          expected-out (list [:example (str/split-lines input-content)])
+          actual-out (tok/tokenize input)]
+      (is (= expected-out actual-out))))
+  (testing "example verse"
+    (let [input-content (str/trim "
+A very good verse
+With multiple lines")
+          input (str/join "\n" (list "#+BEGIN_VERSE"
+                                     input-content
+                                     "#+END_VERSE"))
+          expected-out (list [:verse (str/split-lines input-content)])
+          actual-out (tok/tokenize input)]
       (is (= expected-out actual-out)))))

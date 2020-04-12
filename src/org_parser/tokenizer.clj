@@ -27,6 +27,15 @@
           [rest-unprocessed-lines captured-lines]
           (recur rest-unprocessed-lines (conj captured-lines current-line)))))))
 
+(defn- try-tokenize-block
+  [raw-lines block-keyword end-regex]
+  (let [current-line (first raw-lines)
+        rest-raw-lines (rest raw-lines)
+        [returned-raw-lines block-lines] (find-block rest-raw-lines end-regex)]
+    (if (= (count returned-raw-lines) (count rest-raw-lines))
+      [returned-raw-lines (tokenize-plain-text current-line)]
+      [returned-raw-lines [block-keyword block-lines]])))
+
 (defn- try-tokenize-code-block
   [raw-lines]
   (let [current-line (first raw-lines)
@@ -43,6 +52,8 @@
         [_ directive] (re-matches org-directive-regex current-line)]
     (case directive
       "BEGIN_SRC" (try-tokenize-code-block raw-lines)
+      "BEGIN_EXAMPLE" (try-tokenize-block raw-lines :example #"\s*#\+END_EXAMPLE")
+      "BEGIN_VERSE" (try-tokenize-block raw-lines :verse #"\s*#\+END_VERSE")
       [(rest (raw-lines)) (tokenize-plain-text current-line)])))
 
 (defn tokenize
