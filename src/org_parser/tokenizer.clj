@@ -58,6 +58,12 @@
         tokenized-heading (tokenize-inline-formatting heading-text)]
     [(keyword (str "head" heading-level)) tokenized-heading]))
 
+(defn- tokenize-list
+  [line list-type]
+  (let [[_ list-text] (re-matches list-regex line)
+        tokenized-list-text (tokenize-inline-formatting list-text)]
+    [list-type tokenized-list-text]))
+
 (defn- find-block
   [raw-lines end-regex]
   (loop [unprocessed-lines raw-lines

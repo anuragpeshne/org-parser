@@ -61,7 +61,9 @@ With multiple lines")
                                      "#+END_VERSE"))
           expected-out (list [:verse (str/split-lines input-content)])
           actual-out (tok/tokenize input)]
-      (is (= expected-out actual-out))))
+      (is (= expected-out actual-out)))))
+
+(deftest inline-formatting-test
   (testing "inline bold formatting"
     (let [input "this is *important*"
           expected-out (list [[:text "this is "] [:bold "*important*"]])
@@ -85,5 +87,15 @@ With multiple lines")
   (testing "inline strikethrough formatting"
     (let [input "this is +important+"
           expected-out (list [[:text "this is "] [:strikethrough "+important+"]])
+          actual-out (tok/tokenize input)]
+      (is (= expected-out actual-out)))))
+
+(deftest list-test
+  (testing "simple unordered list"
+    (let [input (str/trim "
+- an *important* list
+  - with a sublist
+")
+          expected-out (list [[:ulist 0 [:text "an "] [:bold "*important*"] [:text " list"]][:ulist 1 [:text "with a sublist"]]])
           actual-out (tok/tokenize input)]
       (is (= expected-out actual-out)))))
