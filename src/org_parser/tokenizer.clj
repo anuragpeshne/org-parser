@@ -1,18 +1,61 @@
 (ns org-parser.tokenizer
   (:require [clojure.string :as str]))
 
-(def heading-regex #"^(\*+)\s+(\w*)")
+(def heading-regex #"^(\*+)\s+(.+)")
 (def org-directive-regex #"\s*#\+([a-zA-Z_]+)(.*)")
+(def inline-format-capture-regex {:bold #"(\*.+?\S\*)(.*)"
+                                  :italic #"(/.+?\S/)(.*)"
+                                  :inline-code #"(~.+?\S~)(.*)"
+                                  :underline #"(_.+?\S_)(.*)"
+                                  :strikethrough #"(\+.+?\S\+)(.*)"
+                                  :verbatim #"(=.+?\S=)(.*)"})
 
 (defn- tokenize-plain-text
   [input-line]
   [:text input-line])
 
+(defn- try-capture-until
+  [chars format-type]
+  (let [until-regex (inline-format-capture-regex format-type)
+        [_ formatted-text rest-chars] (re-matches until-regex (str/join chars))]
+    (if (nil? formatted-text)
+      [chars []]
+      [rest-chars [format-type formatted-text]])))
+
+(defn- tokenize-inline-formatting
+  [raw-chars]
+  (loop [unprocessed-chars raw-chars
+         captured-chars []
+         plain-text-chars []]
+    (if (empty? unprocessed-chars)
+      (if (empty? plain-text-chars)
+        captured-chars
+        (conj captured-chars [:text (str/join plain-text-chars)]))
+      (let [current-char (first unprocessed-chars)
+            rest-unprocessed-chars (rest unprocessed-chars)
+            char-capture-regex-mapping {\* :bold
+                                        \/ :italic
+                                        \_ :underline
+                                        \~ :inline-code
+                                        \= :verbatim
+                                        \+ :strikethrough}
+            [returned-unprocessed-chars returned-captured-chars]
+            (if-let [format-type (char-capture-regex-mapping current-char)]
+              (try-capture-until unprocessed-chars format-type)
+              [unprocessed-chars []])]
+        (if (empty? returned-captured-chars)
+          (recur rest-unprocessed-chars
+                 captured-chars
+                 (conj plain-text-chars current-char))
+          (recur returned-unprocessed-chars
+                 (conj captured-chars [:text (str/join plain-text-chars)] returned-captured-chars)
+                 []))))))
+
 (defn- tokenize-heading
   [line]
   (let [[_ stars heading-text] (re-matches heading-regex line)
         heading-level (count stars)
-        tokenized-heading (tokenize-plain-text heading-text)]
+        tokenized-heading (tokenize-inline-formatting heading-text)]
     [(keyword (str "head" heading-level)) tokenized-heading]))
 
 (defn- find-block
@@ -33,7 +76,7 @@
         rest-raw-lines (rest raw-lines)
         [returned-raw-lines block-lines] (find-block rest-raw-lines end-regex)]
     (if (= (count returned-raw-lines) (count rest-raw-lines))
-      [returned-raw-lines (tokenize-plain-text current-line)]
+      [returned-raw-lines (tokenize-inline-formatting current-line)]
       [returned-raw-lines [block-keyword block-lines]])))
 
 (defn- try-tokenize-code-block
@@ -43,7 +86,7 @@
         [returned-raw-lines block-lines] (find-block rest-raw-lines #"\s*#\+END_SRC")
         [_ directive options] (re-matches org-directive-regex current-line)]
     (if (= (count returned-raw-lines) (count rest-raw-lines))
-      [returned-raw-lines (tokenize-plain-text current-line)]
+      [returned-raw-lines (tokenize-inline-formatting current-line)]
       [returned-raw-lines [:code-block block-lines options]])))
 
 (defn- try-tokenize-org-directive
@@ -67,7 +110,7 @@
               heading-regex [(rest raw-lines)
                              (tokenize-heading current-line)]
               org-directive-regex (try-tokenize-org-directive raw-lines)
-              [(rest raw-lines) (tokenize-plain-text current-line)])]
+              [(rest raw-lines) (tokenize-inline-formatting current-line)])]
         (recur
          returned-raw-lines
          (conj tokenized-lines return-tokenized-line)))
