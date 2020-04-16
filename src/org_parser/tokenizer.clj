@@ -2,6 +2,8 @@
   (:require [clojure.string :as str]))
 
 (def heading-regex #"^(\*+)\s+(.+)")
+(def unordered-list-regex #"(\s*)([-+*]) (.*)")
+(def ordered-list-regex #"(\s*)([0-9]+[.\)]) (.*)")
 (def org-directive-regex #"\s*#\+([a-zA-Z_]+)(.*)")
 (def inline-format-capture-regex {:bold #"(\*.+?\S\*)(.*)"
                                   :italic #"(/.+?\S/)(.*)"
@@ -59,10 +61,11 @@
     [(keyword (str "head" heading-level)) tokenized-heading]))
 
 (defn- tokenize-list
-  [line list-type]
-  (let [[_ list-text] (re-matches list-regex line)
+  [line capturing-regex list-type]
+  (let [[_ spaces _ list-text] (re-matches capturing-regex line)
+        indentation (count spaces)
         tokenized-list-text (tokenize-inline-formatting list-text)]
-    [list-type tokenized-list-text]))
+    [list-type indentation tokenized-list-text]))
 
 (defn- find-block
   [raw-lines end-regex]
@@ -111,12 +114,15 @@
          tokenized-lines []]
     (if-not (empty? raw-lines)
       (let [current-line (first raw-lines)
+            rest-raw-lines (rest raw-lines)
             [returned-raw-lines return-tokenized-line]
             (condp re-matches current-line
-              heading-regex [(rest raw-lines)
+              heading-regex [rest-raw-lines
                              (tokenize-heading current-line)]
               org-directive-regex (try-tokenize-org-directive raw-lines)
-              [(rest raw-lines) (tokenize-inline-formatting current-line)])]
+              unordered-list-regex [rest-raw-lines (tokenize-list current-line unordered-list-regex :ulist)]
+              ordered-list-regex [rest-raw-lines (tokenize-list current-line ordered-list-regex :olist)]
+              [rest-raw-lines (tokenize-inline-formatting current-line)])]
         (recur
          returned-raw-lines
          (conj tokenized-lines return-tokenized-line)))

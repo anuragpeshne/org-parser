@@ -96,6 +96,6 @@ With multiple lines")
 - an *important* list
   - with a sublist
 ")
-          expected-out (list [[:ulist 0 [:text "an "] [:bold "*important*"] [:text " list"]][:ulist 1 [:text "with a sublist"]]])
+          expected-out (list [:ulist 0 [[:text "an "] [:bold "*important*"] [:text " list"]]][:ulist 2 [[:text "with a sublist"]]])
           actual-out (tok/tokenize input)]
       (is (= expected-out actual-out)))))
