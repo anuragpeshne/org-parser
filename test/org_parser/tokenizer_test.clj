@@ -98,4 +98,12 @@ With multiple lines")
 ")
           expected-out (list [:ulist 0 [[:text "an "] [:bold "*important*"] [:text " list"]]][:ulist 2 [[:text "with a sublist"]]])
           actual-out (tok/tokenize input)]
+      (is (= expected-out actual-out))))
+  (testing "simple ordered list"
+    (let [input (str/trim "
+1. an *important* list
+   1) with a sublist
+")
+          expected-out (list [:olist 0 [[:text "an "] [:bold "*important*"] [:text " list"]]][:olist 3 [[:text "with a sublist"]]])
+          actual-out (tok/tokenize input)]
       (is (= expected-out actual-out)))))
