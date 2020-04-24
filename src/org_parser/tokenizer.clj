@@ -58,7 +58,7 @@
   (let [[_ stars heading-text] (re-matches heading-regex line)
         heading-level (count stars)
         tokenized-heading (tokenize-inline-formatting heading-text)]
-    [(keyword (str "head" heading-level)) tokenized-heading]))
+    [:head heading-level tokenized-heading]))
 
 (defn- tokenize-list
   [line capturing-regex list-type]

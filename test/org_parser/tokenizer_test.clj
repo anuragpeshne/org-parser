@@ -6,19 +6,20 @@
 (deftest heading-test
   (testing "Simple h1"
     (let [input "* Head"
-          exp-out (list [:head1 [[:text "Head"]]])
+          exp-out (list [:head 1 [[:text "Head"]]])
           actual-out (tok/tokenize input)]
       (is (= exp-out actual-out))))
   (testing "Simple h2"
     (let [input "** Head"
-          exp-out (list [:head2 [[:text "Head"]]])
+          exp-out (list [:head 2 [[:text "Head"]]])
           actual-out (tok/tokenize input)]
       (is (= exp-out actual-out))))
   (testing "Nested headings"
     (let [input (str/trim "
 * Head1 ~code~
 ** Head2")
-          exp-out (list [:head1 [[:text "Head1 "] [:inline-code "~code~"]]] [:head2 [[:text "Head2"]]])
+          exp-out (list [:head 1 [[:text "Head1 "] [:inline-code "~code~"]]]
+                        [:head 2 [[:text "Head2"]]])
           actual-out (tok/tokenize input)]
       (is (= exp-out actual-out)))))
 
@@ -96,7 +97,8 @@ With multiple lines")
 - an *important* list
   - with a sublist
 ")
-          expected-out (list [:ulist 0 [[:text "an "] [:bold "*important*"] [:text " list"]]][:ulist 2 [[:text "with a sublist"]]])
+          expected-out (list [:ulist 0 [[:text "an "] [:bold "*important*"] [:text " list"]]]
+                             [:ulist 2 [[:text "with a sublist"]]])
           actual-out (tok/tokenize input)]
       (is (= expected-out actual-out))))
   (testing "simple ordered list"
@@ -104,6 +106,7 @@ With multiple lines")
 1. an *important* list
    1) with a sublist
 ")
-          expected-out (list [:olist 0 [[:text "an "] [:bold "*important*"] [:text " list"]]][:olist 3 [[:text "with a sublist"]]])
+          expected-out (list [:olist 0 [[:text "an "] [:bold "*important*"] [:text " list"]]]
+                             [:olist 3 [[:text "with a sublist"]]])
           actual-out (tok/tokenize input)]
       (is (= expected-out actual-out)))))
