@@ -11,6 +11,17 @@
       true
       false)))
 
+(defn- get-list-terminating-condition
+  [list-type list-symbol indentation]
+  (fn
+    [token]
+    (let [[token-type token-indentation token-list-type & _] token]
+      (if (and (= token-type list-type)
+               (= token-list-type list-symbol)
+               (> token-indentation indentation))
+        false
+        true))))
+
 (defn parse
   ([tokens]
    (let [root-terminating-condition (fn [_] false)
@@ -38,6 +49,13 @@
                             (first rest-token-content)
                             [])
                            rest-tokens]
+               (:ulist :olist) (let [[list-type indentation list-symbol list-content & _] current-token
+                                     [children-node returned-unprocessed-tokens]
+                                     (parse
+                                      rest-tokens
+                                      (get-list-terminating-condition list-type list-symbol indentation))]
+                                 [(ASTNode. list-type list-content children-node)
+                                  returned-unprocessed-tokens])
                (throw (Exception. (str "unknown token: " token-type))))]
          (recur (conj acc-children returned-node) returned-unprocessed-tokens))
        [acc-children unprocessed-tokens]))))

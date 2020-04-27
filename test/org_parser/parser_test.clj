@@ -51,3 +51,29 @@
                          tok/tokenize
                          parser/parse)]
       (is (= exp-out actual-out)))))
+
+(deftest ulist-test
+  (testing "nested ulist test"
+    (let [input (str/trim "
+- bullet 1.1
+- bullet 1.2
+  - bullet 2.1
+")
+          exp-out (parser/ASTNode.
+                   :root
+                   nil
+                   [(parser/ASTNode.
+                     :ulist
+                     [[:text "bullet 1.1"]]
+                     [])
+                    (parser/ASTNode.
+                     :ulist
+                     [[:text "bullet 1.2"]]
+                     [(parser/ASTNode.
+                       :ulist
+                       [[:text "bullet 2.1"]]
+                       [])])])
+          actual-out (-> input
+                         tok/tokenize
+                         parser/parse)]
+      (is (= exp-out actual-out)))))

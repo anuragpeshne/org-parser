@@ -68,10 +68,10 @@
 
 (defn- tokenize-list
   [line capturing-regex list-type]
-  (let [[_ spaces _ list-text] (re-matches capturing-regex line)
+  (let [[_ spaces list-symbol list-text] (re-matches capturing-regex line)
         indentation (count spaces)
         tokenized-list-text (tokenize-inline-formatting list-text)]
-    [list-type indentation tokenized-list-text]))
+    [list-type indentation list-symbol tokenized-list-text]))
 
 (defn- find-block
   [raw-lines end-regex]
