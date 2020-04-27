@@ -10,7 +10,8 @@
                                   :inline-code #"(~.+?\S~)(.*)"
                                   :underline #"(_.+?\S_)(.*)"
                                   :strikethrough #"(\+.+?\S\+)(.*)"
-                                  :verbatim #"(=.+?\S=)(.*)"})
+                                  :verbatim #"(=.+?\S=)(.*)"
+                                  :link #"[([.*])([.*])]"})
 
 (defn- tokenize-plain-text
   [input-line]
@@ -40,7 +41,8 @@
                                         \_ :underline
                                         \~ :inline-code
                                         \= :verbatim
-                                        \+ :strikethrough}
+                                        \+ :strikethrough
+                                        \[ :link}
             [returned-unprocessed-chars returned-captured-chars]
             (if-let [format-type (char-capture-regex-mapping current-char)]
               (try-capture-until unprocessed-chars format-type)
@@ -52,6 +54,10 @@
           (recur returned-unprocessed-chars
                  (conj captured-chars [:text (str/join plain-text-chars)] returned-captured-chars)
                  []))))))
+
+(defn- tokenize-paragraph
+  [input-line]
+  [:paragraph (tokenize-inline-formatting input-line)])
 
 (defn- tokenize-heading
   [line]
@@ -85,7 +91,7 @@
         rest-raw-lines (rest raw-lines)
         [returned-raw-lines block-lines] (find-block rest-raw-lines end-regex)]
     (if (= (count returned-raw-lines) (count rest-raw-lines))
-      [returned-raw-lines (tokenize-inline-formatting current-line)]
+      [returned-raw-lines (tokenize-paragraph current-line)]
       [returned-raw-lines [block-keyword block-lines]])))
 
 (defn- try-tokenize-code-block
@@ -95,7 +101,7 @@
         [returned-raw-lines block-lines] (find-block rest-raw-lines #"\s*#\+END_SRC")
         [_ directive options] (re-matches org-directive-regex current-line)]
     (if (= (count returned-raw-lines) (count rest-raw-lines))
-      [returned-raw-lines (tokenize-inline-formatting current-line)]
+      [returned-raw-lines (tokenize-paragraph current-line)]
       [returned-raw-lines [:code-block block-lines options]])))
 
 (defn- try-tokenize-org-directive
@@ -122,7 +128,7 @@
               org-directive-regex (try-tokenize-org-directive raw-lines)
               unordered-list-regex [rest-raw-lines (tokenize-list current-line unordered-list-regex :ulist)]
               ordered-list-regex [rest-raw-lines (tokenize-list current-line ordered-list-regex :olist)]
-              [rest-raw-lines (tokenize-inline-formatting current-line)])]
+              [rest-raw-lines (tokenize-paragraph current-line)])]
         (recur
          returned-raw-lines
          (conj tokenized-lines return-tokenized-line)))

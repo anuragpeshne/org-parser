@@ -38,9 +38,9 @@ int b = a;
 #+BEGIN_SRC c
 int a = 0;
 int b = a;")
-          expected-out (list [[:text "#+BEGIN_SRC c"]]
-                             [[:text "int a = 0;"]]
-                             [[:text "int b = a;"]])
+          expected-out (list [:paragraph [[:text "#+BEGIN_SRC c"]]]
+                             [:paragraph [[:text "int a = 0;"]]]
+                             [:paragraph [[:text "int b = a;"]]])
           actual-out (tok/tokenize input)]
       (is (= expected-out actual-out))))
   (testing "example block"
@@ -67,27 +67,27 @@ With multiple lines")
 (deftest inline-formatting-test
   (testing "inline bold formatting"
     (let [input "this is *important*"
-          expected-out (list [[:text "this is "] [:bold "*important*"]])
+          expected-out (list [:paragraph [[:text "this is "] [:bold "*important*"]]])
           actual-out (tok/tokenize input)]
       (is (= expected-out actual-out))))
   (testing "inline underline formatting"
     (let [input "this is _important_"
-          expected-out (list [[:text "this is "] [:underline "_important_"]])
+          expected-out (list [:paragraph [[:text "this is "] [:underline "_important_"]]])
           actual-out (tok/tokenize input)]
       (is (= expected-out actual-out))))
   (testing "inline italic formatting"
     (let [input "this is /important/"
-          expected-out (list [[:text "this is "] [:italic "/important/"]])
+          expected-out (list [:paragraph [[:text "this is "] [:italic "/important/"]]])
           actual-out (tok/tokenize input)]
       (is (= expected-out actual-out))))
   (testing "inline verbatim formatting"
     (let [input "this is =important="
-          expected-out (list [[:text "this is "] [:verbatim "=important="]])
+          expected-out (list [:paragraph [[:text "this is "] [:verbatim "=important="]]])
           actual-out (tok/tokenize input)]
       (is (= expected-out actual-out))))
   (testing "inline strikethrough formatting"
     (let [input "this is +important+"
-          expected-out (list [[:text "this is "] [:strikethrough "+important+"]])
+          expected-out (list [:paragraph [[:text "this is "] [:strikethrough "+important+"]]])
           actual-out (tok/tokenize input)]
       (is (= expected-out actual-out)))))
 

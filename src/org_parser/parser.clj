@@ -13,16 +13,17 @@
 
 (defn parse
   ([tokens]
-   (let [root-terminating-condition #(true)
+   (let [root-terminating-condition (fn [_] false)
          [children-node _] (parse tokens root-terminating-condition)
          root-node (ASTNode. :root nil children-node)]
      root-node))
-  ([tokens terminating-condition]
+  ([tokens should-terminate?]
    (loop [acc-children []
           unprocessed-tokens tokens]
-     (if (seq unprocessed-tokens)
-       (let [[current-token & rest-tokens] tokens
-             [token-type & token-content] current-token
+     (if (and (seq unprocessed-tokens)
+              (not (should-terminate? (first unprocessed-tokens))))
+       (let [[current-token & rest-tokens] unprocessed-tokens
+             [token-type & rest-token-content] current-token
              [returned-node returned-unprocessed-tokens]
              (case token-type
                :head (let [current-heading-level (second current-token)
@@ -30,8 +31,13 @@
                            (parse
                             rest-tokens
                             (get-heading-terminating-condition current-heading-level))]
-                       [(ASTNode. :head token-content children-node)
+                       [(ASTNode. :head rest-token-content children-node)
                         returned-unprocessed-tokens])
-               (throw (str "unknown token: " token-type)))]
+               :paragraph [(ASTNode.
+                            :paragraph
+                            (first rest-token-content)
+                            [])
+                           rest-tokens]
+               (throw (Exception. (str "unknown token: " token-type))))]
          (recur (conj acc-children returned-node) returned-unprocessed-tokens))
        [acc-children unprocessed-tokens]))))
