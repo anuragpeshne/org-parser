@@ -2,6 +2,9 @@
   (:require [clojure.string :as str]))
 
 (def heading-regex #"^(\*+)\s+(.+)")
+(def example-block-regex #"\s*#\+END_EXAMPLE")
+(def code-block-regex #"\s*#\+END_SRC")
+(def verse-block-regex #"\s*#\+END_VERSE")
 (def unordered-list-regex #"(\s*)([-+*]) (.*)")
 (def ordered-list-regex #"(\s*)([0-9]+[.\)]) (.*)")
 (def org-directive-regex #"\s*#\+([a-zA-Z_]+)(.*)")
@@ -89,29 +92,20 @@
   [raw-lines block-keyword end-regex]
   (let [current-line (first raw-lines)
         rest-raw-lines (rest raw-lines)
-        [returned-raw-lines block-lines] (find-block rest-raw-lines end-regex)]
+        [returned-raw-lines block-lines] (find-block rest-raw-lines end-regex)
+        [_ _ options] (re-matches org-directive-regex current-line)]
     (if (= (count returned-raw-lines) (count rest-raw-lines))
       [returned-raw-lines (tokenize-paragraph current-line)]
-      [returned-raw-lines [block-keyword block-lines]])))
-
-(defn- try-tokenize-code-block
-  [raw-lines]
-  (let [current-line (first raw-lines)
-        rest-raw-lines (rest raw-lines)
-        [returned-raw-lines block-lines] (find-block rest-raw-lines #"\s*#\+END_SRC")
-        [_ directive options] (re-matches org-directive-regex current-line)]
-    (if (= (count returned-raw-lines) (count rest-raw-lines))
-      [returned-raw-lines (tokenize-paragraph current-line)]
-      [returned-raw-lines [:code-block block-lines options]])))
+      [returned-raw-lines [block-keyword options block-lines]])))
 
 (defn- try-tokenize-org-directive
   [raw-lines]
   (let [current-line (first raw-lines)
         [_ directive] (re-matches org-directive-regex current-line)]
     (case directive
-      "BEGIN_SRC" (try-tokenize-code-block raw-lines)
-      "BEGIN_EXAMPLE" (try-tokenize-block raw-lines :example #"\s*#\+END_EXAMPLE")
-      "BEGIN_VERSE" (try-tokenize-block raw-lines :verse #"\s*#\+END_VERSE")
+      "BEGIN_SRC" (try-tokenize-block raw-lines :code-block code-block-regex)
+      "BEGIN_EXAMPLE" (try-tokenize-block raw-lines :example-block example-block-regex)
+      "BEGIN_VERSE" (try-tokenize-block raw-lines :verse-block verse-block-regex)
       [(rest (raw-lines)) (tokenize-plain-text current-line)])))
 
 (defn tokenize

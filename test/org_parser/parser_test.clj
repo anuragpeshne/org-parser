@@ -76,4 +76,90 @@
           actual-out (-> input
                          tok/tokenize
                          parser/parse)]
+      (is (= exp-out actual-out))))
+  (testing "mix of list types"
+    (let [input (str/trim "
+* Bullet Text
+  - bullet 1.1
+  - bullet 1.2
+    - bullet 2.1
+    + bullet 1.3
+")
+          exp-out (parser/ASTNode.
+                   :root
+                   nil
+                   [(parser/ASTNode.
+                     :head
+                     [1 [[:text "Bullet Text"]]]
+                     [(parser/ASTNode.
+                       :ulist
+                       [[:text "bullet 1.1"]]
+                       [])
+                      (parser/ASTNode.
+                       :ulist
+                       [[:text "bullet 1.2"]]
+                       [(parser/ASTNode.
+                         :ulist
+                         [[:text "bullet 2.1"]]
+                         [])])
+                      (parser/ASTNode.
+                       :ulist
+                       [[:text "bullet 1.3"]]
+                       [])])])
+          actual-out (-> input
+                         tok/tokenize
+                         parser/parse)]
+      (is (= exp-out actual-out)))))
+
+(deftest org-block-test
+  (testing "code block"
+    (let [input (str/trim "
+* A /test block/ heading
+  - bullet 1
+    #+BEGIN_SRC c
+    int a = b;
+    double pi = 3.14;
+    #+END_SRC
+")
+          exp-out (parser/ASTNode.
+                   :root
+                   nil
+                   [(parser/ASTNode.
+                     :head
+                     [1 [[:text "A "] [:italic "/test block/"] [:text " heading"]]]
+                     [(parser/ASTNode.
+                       :ulist
+                       [[:text "bullet 1"]]
+                       [(parser/ASTNode.
+                         :code-block
+                         [" c" ["    int a = b;" "    double pi = 3.14;"]]
+                         [])])])])
+          actual-out (-> input
+                         tok/tokenize
+                         parser/parse)]
+      (is (= exp-out actual-out))))
+  (testing "verse block"
+    (let [input (str/trim "
+* A verse block heading
+  - bullet 1
+#+BEGIN_VERSE
+This too shall pass.
+#+END_VERSE
+")
+          exp-out (parser/ASTNode.
+                   :root
+                   nil
+                   [(parser/ASTNode.
+                     :head
+                     [1 [[:text "A verse block heading"]]]
+                     [(parser/ASTNode.
+                       :ulist
+                       [[:text "bullet 1"]]
+                       [(parser/ASTNode.
+                         :verse-block
+                         ["" ["This too shall pass."]]
+                         [])])])])
+          actual-out (-> input
+                         tok/tokenize
+                         parser/parse)]
       (is (= exp-out actual-out)))))

@@ -16,11 +16,14 @@
   (fn
     [token]
     (let [[token-type token-indentation token-list-type & _] token]
-      (if (and (= token-type list-type)
-               (= token-list-type list-symbol)
-               (> token-indentation indentation))
-        false
-        true))))
+      (if (or (= token-type :ulist)
+              (= token-type :olist))
+        (if (and (= token-type list-type)
+                 (= token-list-type list-symbol)
+                 (> token-indentation indentation))
+          false
+          true)
+        false))))
 
 (defn parse
   ([tokens]
@@ -49,13 +52,23 @@
                             (first rest-token-content)
                             [])
                            rest-tokens]
-               (:ulist :olist) (let [[list-type indentation list-symbol list-content & _] current-token
+               (:ulist :olist) (let [[list-type indentation list-symbol list-content & _]
+                                     current-token
                                      [children-node returned-unprocessed-tokens]
                                      (parse
                                       rest-tokens
-                                      (get-list-terminating-condition list-type list-symbol indentation))]
+                                      (get-list-terminating-condition
+                                       list-type
+                                       list-symbol
+                                       indentation))]
                                  [(ASTNode. list-type list-content children-node)
                                   returned-unprocessed-tokens])
-               (throw (Exception. (str "unknown token: " token-type))))]
+               (:code-block :verse-block :example-block) (let [[_ options token-value] current-token]
+                                                           [(ASTNode.
+                                                             token-type
+                                                             [options token-value]
+                                                             [])
+                                                            rest-tokens])
+               [(ASTNode. :paragraph current-token []) rest-tokens])]
          (recur (conj acc-children returned-node) returned-unprocessed-tokens))
        [acc-children unprocessed-tokens]))))
