@@ -8,5 +8,5 @@
   :repl-options {:init-ns org-parser.core}
   :cljsbuild {:builds [{:source-paths ["src"]
                         :compiler {:output-to "target/javascripts/main.js"
-                                   :optimizations :whitespace
+                                   :optimizations :none
                                    :pretty-print true}}]})

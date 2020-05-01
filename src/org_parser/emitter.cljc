@@ -1,14 +1,13 @@
 (ns org-parser.emitter)
 
-#? (:clj (println "hello from clj")
-    :cljs (js/alert "hello from cljs"))
-
 (defn- create-html-element
   [element-type inner-html propertities]
-  #?(:cljs (-> (-> js/document
-                   (.createElement element-type)
-                   (.-innerHTML)
-                   (set! inner-html)))))
+  #?(:cljs (let [element (-> js/document
+                             (.createElement element-type))]
+                 (-> element
+                     (.-innerHTML)
+                     (set! inner-html))
+                 element)))
 
 (defn to-html
   [ast]
