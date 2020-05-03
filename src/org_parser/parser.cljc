@@ -63,12 +63,13 @@
                                        indentation))]
                                  [(ASTNode. list-type list-content children-node)
                                   returned-unprocessed-tokens])
-               (:code-block :verse-block :example-block) (let [[_ options token-value] current-token]
-                                                           [(ASTNode.
-                                                             token-type
-                                                             [options token-value]
-                                                             [])
-                                                            rest-tokens])
+               (:code-block :verse-block :example-block)
+               (let [[_ options token-value] current-token]
+                 [(ASTNode.
+                   token-type
+                   [options token-value]
+                   [])
+                  rest-tokens])
                [(ASTNode. :paragraph current-token []) rest-tokens])]
          (recur (conj acc-children returned-node) returned-unprocessed-tokens))
        [acc-children unprocessed-tokens]))))
