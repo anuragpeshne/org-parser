@@ -1,10 +1,10 @@
 (ns org-parser.emitter
   (:require [clojure.string :as str]))
 
-(defn- throw-unimplement-exception
-  []
-  (throw #?(:clj (Exception. "Unimplemented node type")
-            :cljs (js/Error. "Unimplemented node type"))))
+(defn- throw-unimplemented-exception
+  [name]
+  (throw #?(:clj (Exception. (str "Unimplemented: " name))
+            :cljs (js/Error. (str "Unimplemented: " name)))))
 
 (defn- create-html-element
   [element-type inner-html propertities]
@@ -14,15 +14,19 @@
                      (.-innerHTML)
                      (set! inner-html))
                  element)
-     :clj (str "<" element-type ">" inner-html "</" element-type ">")))
+     :clj (let [property-string (if (nil? propertities)
+                                  ""
+                                  (str " " propertities))]
+            (str "<" element-type property-string ">" inner-html "</" element-type ">"))))
 
 (defn- inline-format-element-to-html
   [element]
   (let [[format content] element]
     (case format
       :text content
-      :bold (create-html-element "b" content nil)
-      (throw-unimplement-exception))))
+      :bold (create-html-element "span" content "class=\"org-bold\"")
+      :italic (create-html-element "span" content "class=\"org-italic\"")
+      (throw-unimplemented-exception format))))
 
 (defn- inline-format-to-html
   [text-list]
@@ -38,4 +42,8 @@
       :head (let [level (first node-val)
                   content (second node-val)]
               (create-html-element (str "h" level) (inline-format-to-html content) nil))
-      (throw-unimplement-exception))))
+      :paragraph (create-html-element
+                  "p"
+                  (str/join " " (map inline-format-to-html node-val))
+                  nil)
+      (throw-unimplemented-exception node-type))))

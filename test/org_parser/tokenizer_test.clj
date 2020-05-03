@@ -18,7 +18,7 @@
     (let [input (str/trim "
 * Head1 ~code~
 ** Head2")
-          exp-out (list [:head 1 [[:text "Head1 "] [:inline-code "~code~"]]]
+          exp-out (list [:head 1 [[:text "Head1 "] [:inline-code "code"]]]
                         [:head 2 [[:text "Head2"]]])
           actual-out (tok/tokenize input)]
       (is (= exp-out actual-out)))))
@@ -67,27 +67,27 @@ With multiple lines")
 (deftest inline-formatting-test
   (testing "inline bold formatting"
     (let [input "this is *important*"
-          expected-out (list [:paragraph [[:text "this is "] [:bold "*important*"]]])
+          expected-out (list [:paragraph [[:text "this is "] [:bold "important"]]])
           actual-out (tok/tokenize input)]
       (is (= expected-out actual-out))))
   (testing "inline underline formatting"
     (let [input "this is _important_"
-          expected-out (list [:paragraph [[:text "this is "] [:underline "_important_"]]])
+          expected-out (list [:paragraph [[:text "this is "] [:underline "important"]]])
           actual-out (tok/tokenize input)]
       (is (= expected-out actual-out))))
   (testing "inline italic formatting"
     (let [input "this is /important/"
-          expected-out (list [:paragraph [[:text "this is "] [:italic "/important/"]]])
+          expected-out (list [:paragraph [[:text "this is "] [:italic "important"]]])
           actual-out (tok/tokenize input)]
       (is (= expected-out actual-out))))
   (testing "inline verbatim formatting"
     (let [input "this is =important="
-          expected-out (list [:paragraph [[:text "this is "] [:verbatim "=important="]]])
+          expected-out (list [:paragraph [[:text "this is "] [:verbatim "important"]]])
           actual-out (tok/tokenize input)]
       (is (= expected-out actual-out))))
   (testing "inline strikethrough formatting"
     (let [input "this is +important+"
-          expected-out (list [:paragraph [[:text "this is "] [:strikethrough "+important+"]]])
+          expected-out (list [:paragraph [[:text "this is "] [:strikethrough "important"]]])
           actual-out (tok/tokenize input)]
       (is (= expected-out actual-out)))))
 
@@ -97,7 +97,7 @@ With multiple lines")
 - an *important* list
   - with a sublist
 ")
-          expected-out (list [:ulist 0 "-" [[:text "an "] [:bold "*important*"] [:text " list"]]]
+          expected-out (list [:ulist 0 "-" [[:text "an "] [:bold "important"] [:text " list"]]]
                              [:ulist 2 "-" [[:text "with a sublist"]]])
           actual-out (tok/tokenize input)]
       (is (= expected-out actual-out))))
@@ -106,7 +106,7 @@ With multiple lines")
 1. an *important* list
    1) with a sublist
 ")
-          expected-out (list [:olist 0 "1." [[:text "an "] [:bold "*important*"] [:text " list"]]]
+          expected-out (list [:olist 0 "1." [[:text "an "] [:bold "important"] [:text " list"]]]
                              [:olist 3 "1)" [[:text "with a sublist"]]])
           actual-out (tok/tokenize input)]
       (is (= expected-out actual-out)))))

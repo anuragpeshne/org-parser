@@ -8,12 +8,12 @@
 (def unordered-list-regex #"(\s*)([-+*]) (.*)")
 (def ordered-list-regex #"(\s*)([0-9]+[.\)]) (.*)")
 (def org-directive-regex #"\s*#\+([a-zA-Z_]+)(.*)")
-(def inline-format-capture-regex {:bold #"(\*.+?\S\*)(.*)"
-                                  :italic #"(/.+?\S/)(.*)"
-                                  :inline-code #"(~.+?\S~)(.*)"
-                                  :underline #"(_.+?\S_)(.*)"
-                                  :strikethrough #"(\+.+?\S\+)(.*)"
-                                  :verbatim #"(=.+?\S=)(.*)"
+(def inline-format-capture-regex {:bold #"\*(.+?\S)\*(.*)"
+                                  :italic #"/(.+?\S)/(.*)"
+                                  :inline-code #"~(.+?\S)~(.*)"
+                                  :underline #"_(.+?\S)_(.*)"
+                                  :strikethrough #"\+(.+?\S)\+(.*)"
+                                  :verbatim #"=(.+?\S)=(.*)"
                                   :link #"[([.*])([.*])]"})
 
 (defn- tokenize-plain-text

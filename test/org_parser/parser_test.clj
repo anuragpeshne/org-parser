@@ -41,12 +41,31 @@
                        [2 [[:text "Head 3"]]]
                        [(parser/ASTNode.
                            :paragraph
-                           [[:text "   Test content of a paragraph"]]
+                           [[[:text "   Test content of a paragraph"]]]
                            [])])])
                     (parser/ASTNode.
                      :head
                      [1 [[:text "Head 4"]]]
                      [])])
+          actual-out (-> input
+                         tok/tokenize
+                         parser/parse)]
+      (is (= exp-out actual-out)))))
+
+(deftest paragraph-test
+  (testing "Simple multiline paragraph"
+    (let [input (str/trim "
+this is a paragraph
+with 2 lines
+")
+          exp-out (parser/ASTNode.
+                   :root
+                   nil
+                   [(parser/ASTNode.
+                    :paragraph
+                    [[[:text "this is a paragraph"]]
+                     [[:text "with 2 lines"]]]
+                    [])])
           actual-out (-> input
                          tok/tokenize
                          parser/parse)]
@@ -126,7 +145,7 @@
                    nil
                    [(parser/ASTNode.
                      :head
-                     [1 [[:text "A "] [:italic "/test block/"] [:text " heading"]]]
+                     [1 [[:text "A "] [:italic "test block"] [:text " heading"]]]
                      [(parser/ASTNode.
                        :ulist
                        [[:text "bullet 1"]]
