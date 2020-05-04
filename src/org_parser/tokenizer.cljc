@@ -5,7 +5,7 @@
 (def example-block-regex #"\s*#\+END_EXAMPLE")
 (def code-block-regex #"\s*#\+END_SRC")
 (def verse-block-regex #"\s*#\+END_VERSE")
-(def unordered-list-regex #"(\s*)([-+*]) (.*)")
+(def unordered-list-regex #"(\s*)([\-+*]) (.*)")
 (def ordered-list-regex #"(\s*)([0-9]+[.\)]) (.*)")
 (def org-directive-regex #"\s*#\+([a-zA-Z_]+)(.*)")
 (def inline-format-capture-regex {:bold #"\*(.+?\S)\*(.*)"
@@ -14,7 +14,7 @@
                                   :underline #"_(.+?\S)_(.*)"
                                   :strikethrough #"\+(.+?\S)\+(.*)"
                                   :verbatim #"=(.+?\S)=(.*)"
-                                  :link #"[([.*])([.*])]"})
+                                  :link #"\[(\[.*\])(\[.*\])\]"})
 
 (defn- tokenize-plain-text
   [input-line]
