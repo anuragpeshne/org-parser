@@ -48,34 +48,36 @@
   [text-list]
   (map inline-format-element-to-html text-list))
 
-(defn- map-with-side-effects
-  [f target coll]
-  (loop [current-target target
-         [current-element & rest-elements] coll]
-    (if (nil? current-element)
-      current-target
-      (let [new-target (f current-target current-element)]
-        (recur new-target rest-elements)))))
-
-(defn to-html
+(defn- to-html-internal
   [ast]
   (let [{node-type :type
          node-val :val
-         node-children :children} ast]
-    (case node-type
-      :root (let [root-div (html-create-element "div"  nil)
-                  children-html (map to-html node-children)]
-              (doseq [child children-html] (html-append-child root-div child))
-              root-div)
-      :head (let [level (first node-val)
-                  content (second node-val)
-                  html-content (inline-format-to-html content)
-                  h-tag (html-create-element (str "h" level)  nil)]
-              (doseq [tag html-content] (html-append-child h-tag tag))
-              h-tag)
-      :paragraph (let [content (map inline-format-to-html node-val)
-                       p-tag (html-create-element "p" nil)]
-                   (println content)
-                   (doseq [tag content] (html-append-child p-tag tag))
-                   p-tag)
-      (throw-unimplemented-exception node-type))))
+         node-children :children} ast
+        children-html (reduce concat [] (map to-html-internal node-children))
+        node-html (case node-type
+                    :head (let [level (first node-val)
+                                content (second node-val)
+                                html-content (inline-format-to-html content)
+                                h-tag (html-create-element (str "h" level)  nil)]
+                            (doseq [tag html-content] (html-append-child h-tag tag))
+                            h-tag)
+                    :paragraph (let [p-tag (html-create-element "p" nil)]
+                                 (doseq [line node-val]
+                                   (let [line-html (inline-format-to-html line)]
+                                     (doseq [span-tag line-html] (html-append-child p-tag span-tag))))
+                                 p-tag)
+                    (throw-unimplemented-exception node-type))
+        result-html (conj children-html node-html)]
+    result-html))
+
+(defn to-html
+  [{node-type :type
+    node-val :val
+    node-children :children}]
+  (if (= node-type :root)
+    (let [root-div (html-create-element "div" nil)
+          children-html (reduce concat [] (map to-html-internal node-children))]
+      (doseq [child children-html] (html-append-child root-div child))
+      root-div)
+    (throw #?(:clj (Exception. "Root node of AST not of type root")
+              :cljs (js/Error. "Root node of AST not of type root")))))
