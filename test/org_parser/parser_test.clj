@@ -82,16 +82,22 @@ with 2 lines
                    :root
                    nil
                    [(parser/ASTNode.
-                     :ulist
-                     [[:text "bullet 1.1"]]
-                     [])
-                    (parser/ASTNode.
-                     :ulist
-                     [[:text "bullet 1.2"]]
+                     :ulist-parent
+                     nil
                      [(parser/ASTNode.
                        :ulist
-                       [[:text "bullet 2.1"]]
-                       [])])])
+                       [[:text "bullet 1.1"]]
+                       [])
+                      (parser/ASTNode.
+                       :ulist
+                       [[:text "bullet 1.2"]]
+                       [(parser/ASTNode.
+                         :ulist-parent
+                         nil
+                         [(parser/ASTNode.
+                           :ulist
+                           [[:text "bullet 2.1"]]
+                           [])])])])])
           actual-out (-> input
                          tok/tokenize
                          parser/parse)]
@@ -111,20 +117,26 @@ with 2 lines
                      :head
                      [1 [[:text "Bullet Text"]]]
                      [(parser/ASTNode.
-                       :ulist
-                       [[:text "bullet 1.1"]]
-                       [])
-                      (parser/ASTNode.
-                       :ulist
-                       [[:text "bullet 1.2"]]
+                       :ulist-parent
+                       nil
                        [(parser/ASTNode.
                          :ulist
-                         [[:text "bullet 2.1"]]
-                         [])])
-                      (parser/ASTNode.
-                       :ulist
-                       [[:text "bullet 1.3"]]
-                       [])])])
+                         [[:text "bullet 1.1"]]
+                         [])
+                        (parser/ASTNode.
+                         :ulist
+                         [[:text "bullet 1.2"]]
+                         [(parser/ASTNode.
+                           :ulist-parent
+                           nil
+                           [(parser/ASTNode.
+                             :ulist
+                             [[:text "bullet 2.1"]]
+                             [])])])
+                        (parser/ASTNode.
+                         :ulist
+                         [[:text "bullet 1.3"]]
+                         [])])])])
           actual-out (-> input
                          tok/tokenize
                          parser/parse)]
@@ -134,7 +146,7 @@ with 2 lines
   (testing "code block"
     (let [input (str/trim "
 * A /test block/ heading
-  - bullet 1
+  1. bullet 1
     #+BEGIN_SRC c
     int a = b;
     double pi = 3.14;
@@ -147,12 +159,15 @@ with 2 lines
                      :head
                      [1 [[:text "A "] [:italic "test block"] [:text " heading"]]]
                      [(parser/ASTNode.
-                       :ulist
-                       [[:text "bullet 1"]]
+                       :olist-parent
+                       nil
                        [(parser/ASTNode.
-                         :code-block
-                         [" c" ["    int a = b;" "    double pi = 3.14;"]]
-                         [])])])])
+                         :olist
+                         [[:text "bullet 1"]]
+                         [(parser/ASTNode.
+                           :code-block
+                           [" c" ["    int a = b;" "    double pi = 3.14;"]]
+                           [])])])])])
           actual-out (-> input
                          tok/tokenize
                          parser/parse)]
@@ -172,12 +187,15 @@ This too shall pass.
                      :head
                      [1 [[:text "A verse block heading"]]]
                      [(parser/ASTNode.
-                       :ulist
-                       [[:text "bullet 1"]]
+                       :ulist-parent
+                       nil
                        [(parser/ASTNode.
-                         :verse-block
-                         ["" ["This too shall pass."]]
-                         [])])])])
+                         :ulist
+                         [[:text "bullet 1"]]
+                         [(parser/ASTNode.
+                           :verse-block
+                           ["" ["This too shall pass."]]
+                           [])])])])])
           actual-out (-> input
                          tok/tokenize
                          parser/parse)]

@@ -25,6 +25,36 @@
           true)
         false))))
 
+(defn- collect-listitem-into-list
+  [ast-list]
+  (loop [[current-node & rest-node-list] ast-list
+         processed-list []
+         current-parent-node nil]
+    (if (not (nil? current-node))
+      (let [node-type (:type current-node)
+            [to-conj-nodes parent]
+            (if (or (= :ulist node-type)
+                    (= :olist node-type))
+              (let [parent-type (keyword (str (name node-type) "-parent"))]
+                (if (and (not (nil? current-parent-node))
+                         (= parent-type (.type current-parent-node)))
+                  (let [children (:children current-parent-node)]
+                    [[] (assoc current-parent-node :children (conj children current-node))])
+                  [[current-parent-node] (ASTNode. parent-type nil [current-node])]))
+              (if (nil? current-parent-node)
+                [[current-node] nil]
+                [[current-parent-node current-node] nil]))
+            [non-nil-to-conj-nodes parent] [(filter #(not (nil? %1)) to-conj-nodes) parent]]
+        (recur rest-node-list (concat processed-list non-nil-to-conj-nodes) parent))
+      (if (nil? current-parent-node)
+        processed-list
+        (conj processed-list current-parent-node)))))
+
+(defn- post-process-children
+  [ast-nodes]
+  (let [processed-node-list (collect-listitem-into-list ast-nodes)]
+    processed-node-list))
+
 (defn parse
   ([tokens]
    (let [root-terminating-condition (fn [_] false)
@@ -57,8 +87,7 @@
                                       [sibling-paragraph-nodes loop-unprocessed-tokens])))]
                            [(ASTNode. :paragraph child-nodes [])
                             returned-unprocessed-tokens])
-               (:ulist :olist) (let [[list-type indentation list-symbol list-content & _]
-                                     current-token
+               (:ulist :olist) (let [[list-type indentation list-symbol list-content & _] current-token
                                      [child-nodes returned-unprocessed-tokens]
                                      (parse
                                       rest-tokens
@@ -77,4 +106,4 @@
                   rest-tokens])
                [(ASTNode. :paragraph current-token []) rest-tokens])]
          (recur (conj acc-children returned-node) returned-unprocessed-tokens))
-       [acc-children unprocessed-tokens]))))
+       [(post-process-children acc-children) unprocessed-tokens]))))
