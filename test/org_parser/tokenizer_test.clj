@@ -97,8 +97,8 @@ With multiple lines")
 - an *important* list
   - with a sublist
 ")
-          expected-out (list [:ulist 0 "-" [[:text "an "] [:bold "important"] [:text " list"]]]
-                             [:ulist 2 "-" [[:text "with a sublist"]]])
+          expected-out (list [:ulist 2 "-" [[:text "an "] [:bold "important"] [:text " list"]]]
+                             [:ulist 4 "-" [[:text "with a sublist"]]])
           actual-out (tok/tokenize input)]
       (is (= expected-out actual-out))))
   (testing "simple ordered list"
@@ -106,7 +106,7 @@ With multiple lines")
 1. an *important* list
    1) with a sublist
 ")
-          expected-out (list [:olist 0 "1." [[:text "an "] [:bold "important"] [:text " list"]]]
-                             [:olist 3 "1)" [[:text "with a sublist"]]])
+          expected-out (list [:olist 3 "1." [[:text "an "] [:bold "important"] [:text " list"]]]
+                             [:olist 6 "1)" [[:text "with a sublist"]]])
           actual-out (tok/tokenize input)]
       (is (= expected-out actual-out)))))

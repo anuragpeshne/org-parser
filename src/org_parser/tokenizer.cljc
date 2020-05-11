@@ -72,7 +72,8 @@
 (defn- tokenize-list
   [line capturing-regex list-type]
   (let [[_ spaces list-symbol list-text] (re-matches capturing-regex line)
-        indentation (count spaces)
+        ;"- list1": indentation must include the symbol and a space
+        indentation (+ 1 (count list-symbol) (count spaces))
         tokenized-list-text (tokenize-inline-formatting list-text)]
     [list-type indentation list-symbol tokenized-list-text]))
 
