@@ -1,6 +1,7 @@
 (ns org-parser.parser)
 
 (defrecord ASTNode [type val children])
+(def start-with-whitespace-regex #"^(\s*).*")
 
 (defn- get-heading-terminating-condition
   [current-heading-level]
@@ -15,15 +16,23 @@
   [list-type list-symbol indentation]
   (fn
     [token]
-    (let [[token-type token-indentation token-list-type & _] token]
-      (if (or (= token-type :ulist)
-              (= token-type :olist))
-        (if (and (= token-type list-type)
-                 (= token-list-type list-symbol)
-                 (> token-indentation indentation))
-          false
-          true)
-        false))))
+    (let [[token-type & _] token]
+      (case token-type
+        (:ulist :olist) (let [[token-type token-indentation token-list-type & _] token]
+                          (if (and (= token-type list-type)
+                                   (= token-list-type list-symbol)
+                                   (> token-indentation indentation))
+                            false
+                            true))
+        :paragraph (let [[_ [[_ first-line] & _] & _] token
+                         [_ spaces] (re-matches start-with-whitespace-regex first-line)
+                         paragraph-indentation (count spaces)]
+                     (< paragraph-indentation indentation))
+        (:code-block :verse-block :example-block) (let [[_ _ [first-line & _]] token
+                                                        [_ spaces] (re-matches start-with-whitespace-regex first-line)
+                                                        block-indentation (count spaces)]
+                                                    (< block-indentation indentation))
+        true))))
 
 (defn- collect-listitem-into-list
   [ast-list]
@@ -37,10 +46,10 @@
                     (= :olist node-type))
               (let [parent-type (keyword (str (name node-type) "-parent"))]
                 (if (and (not (nil? current-parent-node))
-                         (= parent-type (.type current-parent-node)))
-                  (let [children (:children current-parent-node)]
-                    [[] (assoc current-parent-node :children (conj children current-node))])
-                  [[current-parent-node] (ASTNode. parent-type nil [current-node])]))
+                         (= parent-type (:type current-parent-node)))
+                  (let [val (:val current-parent-node)]
+                    [[] (assoc current-parent-node :val (conj val current-node))])
+                  [[current-parent-node] (ASTNode. parent-type [current-node] nil)]))
               (if (nil? current-parent-node)
                 [[current-node] nil]
                 [[current-parent-node current-node] nil]))

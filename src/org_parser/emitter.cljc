@@ -48,36 +48,47 @@
   [text-list]
   (map inline-format-element-to-html text-list))
 
-(defn- to-html-internal
-  [ast]
-  (let [{node-type :type
-         node-val :val
-         node-children :children} ast
-        children-html (reduce concat [] (map to-html-internal node-children))
-        node-html (case node-type
-                    :head (let [level (first node-val)
-                                content (second node-val)
-                                html-content (inline-format-to-html content)
-                                h-tag (html-create-element (str "h" level)  nil)]
-                            (doseq [tag html-content] (html-append-child h-tag tag))
-                            h-tag)
-                    :paragraph (let [p-tag (html-create-element "p" nil)]
-                                 (doseq [line node-val]
-                                   (let [line-html (inline-format-to-html line)]
-                                     (doseq [span-tag line-html] (html-append-child p-tag span-tag))))
-                                 p-tag)
-                    (throw-unimplemented-exception node-type))
-        result-html (conj children-html node-html)]
-    result-html))
+  (defn- to-html-internal
+    [ast]
+    (println ast)
+    (let [{node-type :type
+           node-val :val
+           node-children :children} ast
+          children-html (reduce concat [] (map to-html-internal node-children))
+          node-html (case node-type
+                      :head (let [level (first node-val)
+                                  content (second node-val)
+                                  html-content (inline-format-to-html content)
+                                  h-tag (html-create-element (str "h" level)  nil)]
+                              (doseq [tag html-content] (html-append-child h-tag tag))
+                              h-tag)
+                      :paragraph (let [p-tag (html-create-element "p" nil)]
+                                   (doseq [line node-val]
+                                     (let [line-html (inline-format-to-html line)]
+                                       (doseq [span-tag line-html] (html-append-child p-tag span-tag))))
+                                   p-tag)
+                      (:olist-parent :ulist-parent) (let [list-type (subs (name node-type) 0 2)
+                                                          parent-tag (html-create-element list-type nil)
+                                                          li-list-content (map to-html-internal node-val)]
+                                                      (doseq [li-content li-list-content]
+                                                        (doseq [tag li-content] (html-append-child parent-tag tag)))
+                                                      parent-tag)
+                      (:ulist :olist) (let [li-tag (html-create-element "li" nil)
+                                            html-content (inline-format-to-html node-val)]
+                                        (doseq [tag html-content] (html-append-child li-tag tag))
+                                        li-tag)
+                      (throw-unimplemented-exception node-type))
+          result-html (conj children-html node-html)]
+      result-html))
 
-(defn to-html
-  [{node-type :type
-    node-val :val
-    node-children :children}]
-  (if (= node-type :root)
-    (let [root-div (html-create-element "div" nil)
-          children-html (reduce concat [] (map to-html-internal node-children))]
-      (doseq [child children-html] (html-append-child root-div child))
-      root-div)
-    (throw #?(:clj (Exception. "Root node of AST not of type root")
-              :cljs (js/Error. "Root node of AST not of type root")))))
+  (defn to-html
+    [{node-type :type
+      node-val :val
+      node-children :children}]
+    (if (= node-type :root)
+      (let [root-div (html-create-element "div" nil)
+            children-html (reduce concat [] (map to-html-internal node-children))]
+        (doseq [child children-html] (html-append-child root-div child))
+        root-div)
+      (throw #?(:clj (Exception. "Root node of AST not of type root")
+                :cljs (js/Error. "Root node of AST not of type root")))))

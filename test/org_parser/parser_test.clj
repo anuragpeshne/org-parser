@@ -83,7 +83,6 @@ with 2 lines
                    nil
                    [(parser/ASTNode.
                      :ulist-parent
-                     nil
                      [(parser/ASTNode.
                        :ulist
                        [[:text "bullet 1.1"]]
@@ -93,11 +92,12 @@ with 2 lines
                        [[:text "bullet 1.2"]]
                        [(parser/ASTNode.
                          :ulist-parent
-                         nil
                          [(parser/ASTNode.
                            :ulist
                            [[:text "bullet 2.1"]]
-                           [])])])])])
+                           [])]
+                         nil)])]
+                     nil)])
           actual-out (-> input
                          tok/tokenize
                          parser/parse)]
@@ -118,7 +118,6 @@ with 2 lines
                      [1 [[:text "Bullet Text"]]]
                      [(parser/ASTNode.
                        :ulist-parent
-                       nil
                        [(parser/ASTNode.
                          :ulist
                          [[:text "bullet 1.1"]]
@@ -128,15 +127,16 @@ with 2 lines
                          [[:text "bullet 1.2"]]
                          [(parser/ASTNode.
                            :ulist-parent
-                           nil
                            [(parser/ASTNode.
                              :ulist
                              [[:text "bullet 2.1"]]
-                             [])])])
+                             [])]
+                           nil)])
                         (parser/ASTNode.
                          :ulist
                          [[:text "bullet 1.3"]]
-                         [])])])])
+                         [])]
+                       nil)])])
           actual-out (-> input
                          tok/tokenize
                          parser/parse)]
@@ -147,10 +147,10 @@ with 2 lines
     (let [input (str/trim "
 * A /test block/ heading
   1. bullet 1
-    #+BEGIN_SRC c
-    int a = b;
-    double pi = 3.14;
-    #+END_SRC
+     #+BEGIN_SRC c
+     int a = b;
+     double pi = 3.14;
+     #+END_SRC
 ")
           exp-out (parser/ASTNode.
                    :root
@@ -160,14 +160,14 @@ with 2 lines
                      [1 [[:text "A "] [:italic "test block"] [:text " heading"]]]
                      [(parser/ASTNode.
                        :olist-parent
-                       nil
                        [(parser/ASTNode.
                          :olist
                          [[:text "bullet 1"]]
                          [(parser/ASTNode.
                            :code-block
-                           [" c" ["    int a = b;" "    double pi = 3.14;"]]
-                           [])])])])])
+                           [" c" ["     int a = b;" "     double pi = 3.14;"]]
+                           [])])]
+                       nil)])])
           actual-out (-> input
                          tok/tokenize
                          parser/parse)]
@@ -188,14 +188,15 @@ This too shall pass.
                      [1 [[:text "A verse block heading"]]]
                      [(parser/ASTNode.
                        :ulist-parent
-                       nil
                        [(parser/ASTNode.
                          :ulist
                          [[:text "bullet 1"]]
-                         [(parser/ASTNode.
-                           :verse-block
-                           ["" ["This too shall pass."]]
-                           [])])])])])
+                         [])]
+                       nil)
+                      (parser/ASTNode.
+                       :verse-block
+                       ["" ["This too shall pass."]]
+                       [])])])
           actual-out (-> input
                          tok/tokenize
                          parser/parse)]
